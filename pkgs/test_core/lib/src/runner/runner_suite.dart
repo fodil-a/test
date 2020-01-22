@@ -6,14 +6,13 @@ import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:stream_channel/stream_channel.dart';
-
 import 'package:test_api/src/backend/group.dart'; // ignore: implementation_imports
 import 'package:test_api/src/backend/suite.dart'; // ignore: implementation_imports
 import 'package:test_api/src/backend/suite_platform.dart'; // ignore: implementation_imports
 import 'package:test_api/src/backend/test.dart'; // ignore: implementation_imports
 
-import 'suite.dart';
 import 'environment.dart';
+import 'suite.dart';
 
 /// A suite produced and consumed by the test runner that has runner-specific
 /// logic and lifecycle management.
@@ -75,6 +74,11 @@ class RunnerSuite extends Suite {
     return RunnerSuite._(_controller, filtered, path, platform);
   }
 
+  Future<void> gatherCoverage(String coverage) async {
+    print('Gathering coverage in the runner suite');
+    await _controller._gatherCoverage(coverage);
+  }
+
   /// Closes the suite and releases any resources associated with it.
   Future close() => _controller._close();
 }
@@ -97,6 +101,8 @@ class RunnerSuiteController {
   /// The function to call when the suite is closed.
   final Function() _onClose;
 
+  final Future<void> Function(String) _gatherCoverage;
+
   /// The backing value for [suite.isDebugging].
   bool _isDebugging = false;
 
@@ -108,8 +114,11 @@ class RunnerSuiteController {
 
   RunnerSuiteController(this._environment, this._config, this._suiteChannel,
       Future<Group> groupFuture, SuitePlatform platform,
-      {String path, Function() onClose})
-      : _onClose = onClose {
+      {String path,
+      Function() onClose,
+      Future<void> Function(String) gatherCoverage})
+      : _onClose = onClose,
+        _gatherCoverage = gatherCoverage {
     _suite =
         groupFuture.then((group) => RunnerSuite._(this, group, path, platform));
   }
@@ -119,7 +128,8 @@ class RunnerSuiteController {
   RunnerSuiteController._local(this._environment, this._config,
       {Function() onClose})
       : _suiteChannel = null,
-        _onClose = onClose;
+        _onClose = onClose,
+        _gatherCoverage = null;
 
   /// Sets whether the suite is paused for debugging.
   ///

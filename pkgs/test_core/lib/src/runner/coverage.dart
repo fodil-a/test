@@ -15,19 +15,21 @@ Future<void> gatherCoverage(
     String coverage, LiveSuiteController controller) async {
   final suite = controller.liveSuite.suite;
 
-  if (!suite.platform.runtime.isDartVM) return;
+  if (!suite.platform.runtime.isDartVM) {
+    await suite.gatherCoverage(coverage);
+  } else {
+    final isolateId = Uri.parse(suite.environment.observatoryUrl.fragment)
+        .queryParameters['isolateId'];
 
-  final isolateId = Uri.parse(suite.environment.observatoryUrl.fragment)
-      .queryParameters['isolateId'];
+    final cov = await collect(
+        suite.environment.observatoryUrl, false, false, false, {},
+        isolateIds: {isolateId});
 
-  final cov = await collect(
-      suite.environment.observatoryUrl, false, false, false, {},
-      isolateIds: {isolateId});
-
-  final outfile = File(p.join('$coverage', '${suite.path}.vm.json'))
-    ..createSync(recursive: true);
-  final out = outfile.openWrite();
-  out.write(json.encode(cov));
-  await out.flush();
-  await out.close();
+    final outfile = File(p.join('$coverage', '${suite.path}.vm.json'))
+      ..createSync(recursive: true);
+    final out = outfile.openWrite();
+    out.write(json.encode(cov));
+    await out.flush();
+    await out.close();
+  }
 }
