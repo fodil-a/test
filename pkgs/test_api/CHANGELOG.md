@@ -1,3 +1,8 @@
+## 0.2.15-dev
+
+* Remove the `StackTraceMapper` class. `StackTraceFormatter` now takes a
+  `StackTrace Function(StackTrace)`.
+
 ## 0.2.14
 
 * Bump minimum SDK to `2.4.0` for safer usage of for-loop elements.

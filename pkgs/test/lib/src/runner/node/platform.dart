@@ -16,13 +16,11 @@ import 'package:yaml/yaml.dart';
 
 import 'package:test_api/src/backend/runtime.dart'; // ignore: implementation_imports
 import 'package:test_api/src/backend/suite_platform.dart'; // ignore: implementation_imports
-import 'package:test_api/src/util/stack_trace_mapper.dart'; // ignore: implementation_imports
 import 'package:test_api/src/utils.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/platform.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/runner_suite.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/suite.dart'; // ignore: implementation_imports
 import 'package:test_core/src/util/io.dart'; // ignore: implementation_imports
-import 'package:test_core/src/util/stack_trace_mapper.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/application_exception.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/compiler_pool.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/configuration.dart'; // ignore: implementation_imports
@@ -31,6 +29,7 @@ import 'package:test_core/src/runner/plugin/customizable_platform.dart'; // igno
 import 'package:test_core/src/runner/plugin/environment.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/plugin/platform_helpers.dart'; // ignore: implementation_imports
 
+import '../../util/stack_trace_mapper.dart';
 import '../executable_settings.dart';
 
 /// A platform that loads tests in Node.js processes.
@@ -95,9 +94,9 @@ class NodePlatform extends PlatformPlugin
 
   /// Loads a [StreamChannel] communicating with the test suite at [path].
   ///
-  /// Returns that channel along with a [StackTraceMapper] representing the
+  /// Returns that channel along with a [JSStackTraceMapper] representing the
   /// source map for the compiled suite.
-  Future<Pair<StreamChannel, StackTraceMapper>> _loadChannel(
+  Future<Pair<StreamChannel, JSStackTraceMapper>> _loadChannel(
       String path, Runtime runtime, SuiteConfiguration suiteConfig) async {
     var server = await MultiServerSocket.loopback(0);
 
@@ -131,9 +130,9 @@ class NodePlatform extends PlatformPlugin
 
   /// Spawns a Node.js process that loads the Dart test suite at [path].
   ///
-  /// Returns that channel along with a [StackTraceMapper] representing the
+  /// Returns that channel along with a [JSStackTraceMapper] representing the
   /// source map for the compiled suite.
-  Future<Pair<Process, StackTraceMapper>> _spawnProcess(String path,
+  Future<Pair<Process, JSStackTraceMapper>> _spawnProcess(String path,
       Runtime runtime, SuiteConfiguration suiteConfig, int socketPort) async {
     if (_config.suiteDefaults.precompiledPath != null) {
       return _spawnPrecompiledProcess(path, runtime, suiteConfig, socketPort,
@@ -147,7 +146,7 @@ class NodePlatform extends PlatformPlugin
 
   /// Compiles [testPath] with dart2js, adds the node preamble, and then spawns
   /// a Node.js process that loads that Dart test suite.
-  Future<Pair<Process, StackTraceMapper>> _spawnNormalProcess(String testPath,
+  Future<Pair<Process, JSStackTraceMapper>> _spawnNormalProcess(String testPath,
       Runtime runtime, SuiteConfiguration suiteConfig, int socketPort) async {
     var dir = Directory(_compiledDir).createTempSync('test_').path;
     var jsPath = p.join(dir, p.basename(testPath) + '.node_test.dart.js');
@@ -167,7 +166,7 @@ class NodePlatform extends PlatformPlugin
     await jsFile.writeAsString(
         preamble.getPreamble(minified: true) + await jsFile.readAsString());
 
-    StackTraceMapper mapper;
+    JSStackTraceMapper mapper;
     if (!suiteConfig.jsTrace) {
       var mapPath = jsPath + '.map';
       mapper = JSStackTraceMapper(await File(mapPath).readAsString(),
@@ -181,13 +180,13 @@ class NodePlatform extends PlatformPlugin
 
   /// Spawns a Node.js process that loads the Dart test suite at [testPath]
   /// under [precompiledPath].
-  Future<Pair<Process, StackTraceMapper>> _spawnPrecompiledProcess(
+  Future<Pair<Process, JSStackTraceMapper>> _spawnPrecompiledProcess(
       String testPath,
       Runtime runtime,
       SuiteConfiguration suiteConfig,
       int socketPort,
       String precompiledPath) async {
-    StackTraceMapper mapper;
+    JSStackTraceMapper mapper;
     var jsPath = p.join(precompiledPath, '$testPath.node_test.dart.js');
     if (!suiteConfig.jsTrace) {
       var mapPath = jsPath + '.map';
@@ -205,7 +204,7 @@ class NodePlatform extends PlatformPlugin
   /// Requests the compiled js for [testPath] from the pub serve url, prepends
   /// the node preamble, and then spawns a Node.js process that loads that Dart
   /// test suite.
-  Future<Pair<Process, StackTraceMapper>> _spawnPubServeProcess(String testPath,
+  Future<Pair<Process, JSStackTraceMapper>> _spawnPubServeProcess(String testPath,
       Runtime runtime, SuiteConfiguration suiteConfig, int socketPort) async {
     var dir = Directory(_compiledDir).createTempSync('test_').path;
     var jsPath = p.join(dir, p.basename(testPath) + '.node_test.dart.js');
@@ -215,7 +214,7 @@ class NodePlatform extends PlatformPlugin
     var js = await _get(url, testPath);
     await File(jsPath).writeAsString(preamble.getPreamble(minified: true) + js);
 
-    StackTraceMapper mapper;
+    JSStackTraceMapper mapper;
     if (!suiteConfig.jsTrace) {
       var mapUrl = url.replace(path: url.path + '.map');
       mapper = JSStackTraceMapper(await _get(mapUrl, testPath),

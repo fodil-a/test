@@ -6,9 +6,6 @@ import 'dart:async';
 
 import 'package:stream_channel/stream_channel.dart';
 
-import 'package:test_api/src/backend/stack_trace_formatter.dart'; // ignore: implementation_imports
-import 'package:test_api/src/util/stack_trace_mapper.dart'; // ignore: implementation_imports
-
 import 'package:test_api/src/remote_listener.dart'; // ignore: implementation_imports
 import 'package:test_api/src/suite_channel_manager.dart'; // ignore: implementation_imports
 
@@ -51,19 +48,4 @@ StreamChannel suiteChannel(String name) {
   }
 
   return manager.connectOut(name);
-}
-
-/// Sets the stack trace mapper for the current test suite.
-///
-/// This is used to convert JavaScript stack traces into their Dart equivalents
-/// using source maps. It should be set before any tests run, usually in the
-/// `onLoad()` callback to [serializeSuite].
-void setStackTraceMapper(StackTraceMapper mapper) {
-  var formatter = StackTraceFormatter.current;
-  if (formatter == null) {
-    throw StateError(
-        'setStackTraceMapper() may only be called within a test worker.');
-  }
-
-  formatter.configure(mapper: mapper);
 }

@@ -6,7 +6,6 @@ import 'dart:async';
 
 import 'package:stack_trace/stack_trace.dart';
 
-import '../util/stack_trace_mapper.dart';
 import 'invoker.dart';
 
 /// The key used to look up [StackTraceFormatter.current] in a zone.
@@ -18,9 +17,8 @@ final _currentKey = Object();
 /// This can convert JavaScript stack traces to Dart using source maps, and fold
 /// irrelevant frames out of the stack trace.
 class StackTraceFormatter {
-  /// A class that converts [trace] into a Dart stack trace, or `null` to use it
-  /// as-is.
-  StackTraceMapper _mapper;
+  /// Normalizes a stack trace into Dart format.
+  StackTrace Function(StackTrace) _mapper;
 
   /// The set of packages to fold when producing terse [Chain]s.
   var _except = {'test', 'stream_channel', 'test_api'};
@@ -48,7 +46,9 @@ class StackTraceFormatter {
   /// [only] is non-empty, it indicates packages whose frames should *not* be
   /// folded away.
   void configure(
-      {StackTraceMapper mapper, Set<String> except, Set<String> only}) {
+      {StackTrace Function(StackTrace) mapper,
+      Set<String> except,
+      Set<String> only}) {
     if (mapper != null) _mapper = mapper;
     if (except != null) _except = except;
     if (only != null) _only = only;
@@ -64,8 +64,7 @@ class StackTraceFormatter {
     verbose ??=
         Invoker.current?.liveTest?.test?.metadata?.verboseTrace ?? false;
 
-    var chain =
-        Chain.forTrace(_mapper?.mapStackTrace(stackTrace) ?? stackTrace);
+    var chain = Chain.forTrace(_mapper?.call(stackTrace) ?? stackTrace);
     if (verbose) return chain;
 
     return chain.foldFrames((frame) {

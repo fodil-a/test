@@ -5,10 +5,9 @@
 import 'package:package_resolver/package_resolver.dart';
 import 'package:source_map_stack_trace/source_map_stack_trace.dart' as mapper;
 import 'package:source_maps/source_maps.dart';
-import 'package:test_api/src/util/stack_trace_mapper.dart'; // ignore: implementation_imports
 
-/// A class for mapping JS stack traces to Dart stack traces using source maps.
-class JSStackTraceMapper extends StackTraceMapper {
+/// A mapping from a JS stack trace to a Dart stack trace using source maps.
+class JSStackTraceMapper {
   /// The parsed source map.
   ///
   /// This is initialized lazily in `mapStackTrace()`.
@@ -33,7 +32,6 @@ class JSStackTraceMapper extends StackTraceMapper {
         _sdkRoot = sdkRoot;
 
   /// Converts [trace] into a Dart stack trace.
-  @override
   StackTrace mapStackTrace(StackTrace trace) {
     _mapping ??= parseExtended(_mapContents, mapUrl: _mapUrl);
     return mapper.mapStackTrace(_mapping, trace,
@@ -41,7 +39,6 @@ class JSStackTraceMapper extends StackTraceMapper {
   }
 
   /// Returns a Map representation which is suitable for JSON serialization.
-  @override
   Map<String, dynamic> serialize() {
     return {
       'mapContents': _mapContents,
@@ -53,9 +50,9 @@ class JSStackTraceMapper extends StackTraceMapper {
     };
   }
 
-  /// Returns a [StackTraceMapper] contained in the provided serialized
+  /// Returns a [JSStackTraceMapper] contained in the provided serialized
   /// representation.
-  static StackTraceMapper deserialize(Map serialized) {
+  static JSStackTraceMapper deserialize(Map serialized) {
     if (serialized == null) return null;
     var packageRoot = serialized['packageRoot'] as String ?? '';
     return JSStackTraceMapper(serialized['mapContents'] as String,

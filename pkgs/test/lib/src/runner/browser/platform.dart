@@ -23,22 +23,21 @@ import 'package:yaml/yaml.dart';
 
 import 'package:test_api/src/backend/runtime.dart'; // ignore: implementation_imports
 import 'package:test_api/src/backend/suite_platform.dart'; // ignore: implementation_imports
-import 'package:test_api/src/util/stack_trace_mapper.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/runner_suite.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/platform.dart'; // ignore: implementation_imports
 import 'package:test_api/src/utils.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/suite.dart'; // ignore: implementation_imports
 
 import 'package:test_core/src/util/io.dart'; // ignore: implementation_imports
-import 'package:test_core/src/util/stack_trace_mapper.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/compiler_pool.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/configuration.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/load_exception.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/plugin/customizable_platform.dart'; // ignore: implementation_imports
 
-import '../executable_settings.dart';
-import '../../util/path_handler.dart';
 import '../../util/one_off_handler.dart';
+import '../../util/path_handler.dart';
+import '../../util/stack_trace_mapper.dart';
+import '../executable_settings.dart';
 import 'browser_manager.dart';
 import 'default_settings.dart';
 
@@ -126,7 +125,7 @@ class BrowserPlatform extends PlatformPlugin
   final _compileFutures = <String, Future>{};
 
   /// Mappers for Dartifying stack traces, indexed by test path.
-  final _mappers = <String, StackTraceMapper>{};
+  final _mappers = <String, JSStackTraceMapper>{};
 
   /// The default template for html tests.
   final String _defaultTemplatePath;

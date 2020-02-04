@@ -9,7 +9,6 @@ import 'package:async/async.dart';
 import 'package:pool/pool.dart';
 import 'package:stream_channel/stream_channel.dart';
 import 'package:test_api/src/backend/runtime.dart'; // ignore: implementation_imports
-import 'package:test_api/src/util/stack_trace_mapper.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/application_exception.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/environment.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/plugin/platform_helpers.dart'; // ignore: implementation_imports
@@ -18,6 +17,7 @@ import 'package:test_core/src/runner/suite.dart'; // ignore: implementation_impo
 import 'package:test_core/src/util/io.dart'; // ignore: implementation_imports
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import '../../util/stack_trace_mapper.dart';
 import '../executable_settings.dart';
 import 'browser.dart';
 import 'chrome.dart';
@@ -202,7 +202,7 @@ class BrowserManager {
   /// from this test suite.
   Future<RunnerSuite> load(
       String path, Uri url, SuiteConfiguration suiteConfig, Object message,
-      {StackTraceMapper mapper}) async {
+      {JSStackTraceMapper mapper}) async {
     url = url.replace(
         fragment: Uri.encodeFull(jsonEncode({
       'metadata': suiteConfig.metadata.serialize(),

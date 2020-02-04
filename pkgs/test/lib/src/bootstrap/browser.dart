@@ -2,10 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:test_core/src/util/stack_trace_mapper.dart'; // ignore: implementation_imports
+import 'package:test_api/src/backend/stack_trace_formatter.dart'; // ignore: implementation_imports
 import 'package:test_core/src/runner/plugin/remote_platform_helpers.dart'; // ignore: implementation_imports
 
 import '../runner/browser/post_message_channel.dart';
+import '../util/stack_trace_mapper.dart';
 
 /// Bootstraps a browser test to communicate with the test runner.
 void internalBootstrapBrowserTest(Function Function() getMain) {
@@ -14,7 +15,8 @@ void internalBootstrapBrowserTest(Function Function() getMain) {
     var serialized =
         await suiteChannel('test.browser.mapper').stream.first as Map;
     if (serialized == null) return;
-    setStackTraceMapper(JSStackTraceMapper.deserialize(serialized));
+    StackTraceFormatter.current.configure(
+        mapper: JSStackTraceMapper.deserialize(serialized).mapStackTrace);
   });
   postMessageChannel().pipe(channel);
 }
