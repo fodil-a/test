@@ -141,6 +141,7 @@ class Declarer {
       bool solo = false}) {
     _checkNotBuilt('test');
 
+    var currentZone = Zone.current;
     var newMetadata = Metadata.parse(
         testOn: testOn,
         timeout: timeout,
@@ -166,14 +167,13 @@ class Declarer {
         }
       }
 
-      await runZoned(
+      // Make the declarer visible to running tests so that they'll throw
+      // useful errors when calling `test()` and `group()` within a test.
+      await currentZone.fork(zoneValues: {#test.declarer: this}).run(
           () => Invoker.current.waitForOutstandingCallbacks(() async {
                 await _runSetUps();
                 await body();
-              }),
-          // Make the declarer visible to running tests so that they'll throw
-          // useful errors when calling `test()` and `group()` within a test.
-          zoneValues: {#test.declarer: this});
+              }));
     }, trace: _collectTraces ? Trace.current(2) : null, guarded: false));
 
     if (solo) {
